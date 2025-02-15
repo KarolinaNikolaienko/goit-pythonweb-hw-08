@@ -19,6 +19,16 @@ async def read_contacts(
     contacts = await contact_service.get_contacts(skip, limit)
     return contacts
 
+@router.get("/search", response_model=List[ContactResponse], status_code=status.HTTP_200_OK)
+async def search_contact(q: str, skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
+    contact_service = ContactService(db)
+    contacts = await contact_service.search_contact(q, skip, limit)
+    if contacts is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=messages.CONTACT_NOT_FOUND
+        )
+    return contacts
+
 @router.get("/{contact_id}", response_model=ContactResponse, status_code=status.HTTP_200_OK)
 async def read_contact(contact_id: int, db: AsyncSession = Depends(get_db)):
     contact_service = ContactService(db)
@@ -28,6 +38,7 @@ async def read_contact(contact_id: int, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND, detail=messages.CONTACT_NOT_FOUND
         )
     return contact
+
 
 @router.post("/", response_model=ContactResponse, status_code=status.HTTP_201_CREATED)
 async def create_contact(body: ContactBase, db: AsyncSession = Depends(get_db)):

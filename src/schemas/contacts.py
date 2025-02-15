@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, ConfigDict, EmailStr, field_validator
 class ContactBase(BaseModel):
     name: str = Field(min_length=2, max_length=25)
     surname: str = Field(min_length=2, max_length=25)
-    email: str = EmailStr
+    email: EmailStr
     phone: str = Field(min_length=9, max_length=13)
     birthday: date
     additional_data: Optional[str] = Field(max_length=200)

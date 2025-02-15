@@ -1,6 +1,6 @@
 from typing import List
 
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -20,6 +20,15 @@ class ContactRepository:
         stmt = select(Contact).filter_by(id=contact_id)
         contact = await self.db.execute(stmt)
         return contact.scalar_one_or_none()
+
+    async def search_contact(self, q: str, skip: int, limit: int):
+        stmt = select(Contact).filter(or_(Contact.name.ilike(f"%{q}%"),
+                                          Contact.surname.ilike(f"%{q}%"),
+                                          Contact.email.ilike(f"%{q}%"),
+                                          Contact.phone.ilike(f"%{q}%"),
+                                          )).offset(skip).limit(limit)
+        contacts = await self.db.execute(stmt)
+        return contacts.scalars().all()
 
     async def create_contact(self, body: ContactBase) -> Contact:
         contact = Contact(**body.model_dump(exclude_unset=True))
