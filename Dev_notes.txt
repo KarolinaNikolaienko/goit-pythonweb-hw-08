@@ -1,0 +1,2 @@
+for async migration run
+    alembic init -t async migrations
