@@ -22,3 +22,6 @@ class ContactResponse(ContactBase):
     updated_at: Optional[datetime] | None
 
     model_config = ConfigDict(from_attributes=True)
+
+class ContactBirthdayRequest(BaseModel):
+    days: int = Field(ge=0, le=366)

@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
-from src.schemas.contacts import ContactBase, ContactResponse
+from src.schemas.contacts import ContactBase, ContactResponse, ContactBirthdayRequest
 from src.services.contacts import ContactService
 
 from src.conf import messages
@@ -58,7 +58,7 @@ async def update_contact(
     return contact
 
 @router.delete("/{contact_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def remove_note(contact_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_contact(contact_id: int, db: AsyncSession = Depends(get_db)):
     contact_service = ContactService(db)
     contact = await contact_service.delete_contact(contact_id)
     if contact is None:
@@ -66,4 +66,12 @@ async def remove_note(contact_id: int, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND, detail=messages.CONTACT_NOT_FOUND
         )
     return
+
+@router.post("/birthdays", response_model=List[ContactResponse], status_code=status.HTTP_200_OK)
+async def get_birthdays(body: ContactBirthdayRequest,
+    skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)
+):
+    contact_service = ContactService(db)
+    contacts = await contact_service.get_birthdays(body.days, skip, limit)
+    return contacts
 

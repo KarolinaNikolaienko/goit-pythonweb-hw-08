@@ -1,8 +1,11 @@
+from datetime import date
 from typing import List
 
-from sqlalchemy import select, or_
+import sqlalchemy
+from sqlalchemy import select, or_, extract, func, Integer, cast
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy.sql.sqltypes import Date, DateTime
 
 from src.database.models import Contact
 from src.schemas.contacts import ContactBase, ContactResponse
@@ -27,6 +30,15 @@ class ContactRepository:
                                           Contact.email.ilike(f"%{q}%"),
                                           Contact.phone.ilike(f"%{q}%"),
                                           )).offset(skip).limit(limit)
+        contacts = await self.db.execute(stmt)
+        return contacts.scalars().all()
+
+    async def get_birthdays(self, days: int, skip: int, limit: int) -> List[Contact]:
+        stmt = select(Contact).where(
+            (func.make_date(date.today().year,
+                            cast(func.extract('month', Contact.birthday), Integer),
+                            cast(func.extract('day', Contact.birthday), Integer)
+                            ) - date.today()) <= days).offset(skip).limit(limit)
         contacts = await self.db.execute(stmt)
         return contacts.scalars().all()
 
